@@ -7,7 +7,7 @@ import sys
 
 
 HOST = '0.0.0.0'
-PORT = 55555
+PORT = 50000
 
 WORD_FILE = 'words.txt'
 WRONG_MAX = 3
@@ -27,7 +27,7 @@ def main():
 
     conn, addr = server.accept()
 
-    with open('WORD_FILE', 'r') as f:
+    with open(WORD_FILE, 'r') as f:
         for line in f:
             wrong = 0
             answer = createAnswer(line)
