@@ -5,6 +5,10 @@
 import socket
 import sys
 
+if len(sys.argv) < 2:
+    print('few arguments')
+    sys.exit(1)
+
 port = int(sys.argv[1])
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(('127.0.0.1', port))

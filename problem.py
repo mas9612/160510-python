@@ -2,6 +2,7 @@
 
 # -*- coding: utf-8 -*-
 
+# import select
 import socket
 import sys
 
@@ -29,30 +30,7 @@ def sendHelp(conn):
     conn.sendall('--------------------------------------------\n\n'.encode('utf-8'))
 
 
-def main():
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    if len(sys.argv) < 2:
-        print('few arguments')
-        print('problem.py [port number]')
-        sys.exit(1)
-
-    if not sys.argv[1].isdigit():
-        print('invalid port number')
-        sys.exit(1)
-
-    host = '127.0.0.1'
-    port = int(sys.argv[1])
-
-    server.bind((host, port))
-    server.listen(1)
-
-    conn, addr = server.accept()
-
-    print('accept from {}'.format(addr))
-
-    sendHelp(conn)
-
+def mainProblem(conn):
     with open(WORD_FILE, 'r') as f:
         for line in f:
             wrong = 0
@@ -78,6 +56,32 @@ def main():
 
     conn.sendall('complete'.encode('utf-8'))
 
+
+def main():
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    if len(sys.argv) < 2:
+        print('few arguments')
+        print('problem.py [port number]')
+        sys.exit(1)
+
+    if not sys.argv[1].isdigit():
+        print('invalid port number')
+        sys.exit(1)
+
+    host = '0.0.0.0'
+    port = int(sys.argv[1])
+
+    server.bind((host, port))
+    server.listen(10)
+    # server.setblocking(False)
+
+    conn, addr = server.accept()
+
+    print('accept from {}'.format(addr))
+
+    sendHelp(conn)
+    mainProblem(conn)
 
 if __name__ == '__main__':
     main()
