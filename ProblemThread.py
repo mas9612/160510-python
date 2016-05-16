@@ -2,17 +2,26 @@
 
 # -*- coding: utf-8 -*-
 
-import sys
 import threading
+import sqlite3
+import random
+
+# TODO: get english words from sqlite, then join it and send to client.
 
 
 class ProblemThread(threading.Thread):
     WRONG_MAX = 3
     WORD_FILE = 'words.txt'
 
+    DB_FILE = 'word_data.db'
+    WORD_COUNT_MAX = 234
+
+    WORD_PER_ONE_PROBLEM = 10
+
     def __init__(self, conn):
         super().__init__()
         self.conn = conn
+        random.seed()
 
     def run(self):
         self.sendHelp(self.conn)
@@ -31,32 +40,84 @@ class ProblemThread(threading.Thread):
         conn.sendall('--------------------------------------------\n\n'
                      .encode('utf-8'))
 
+    def mainProblem(self, conn):
+        wrong = 0
+        PROBLEM_AMOUNT = 100
+
+        for i in range(PROBLEM_AMOUNT):
+            words = 'q:' + self.fetchProblemWords()
+            answer = self.createAnswer(words[2:])
+            encoded = words.encode('utf-8')
+            conn.sendall(encoded)
+
+            while True:
+                data = conn.recv(1024)
+                if data.strip().decode('utf-8') == answer:  # correct answer
+                    break
+                else:
+                    wrong += 1
+                    if wrong >= ProblemThread.WRONG_MAX:
+                        conn.sendall('Game Over'.encode('utf-8'))
+                        print('Game over. Disconnected for', conn.getpeername())
+                        conn.close()
+                        return
+                    conn.sendall(encoded)
+
+        conn.sendall('complete'.encode('utf-8'))
+
+    # def mainProblem(self, conn):
+    #     with open(ProblemThread.WORD_FILE, 'r') as f:
+    #         for line in f:
+    #             wrong = 0
+    #             answer = self.createAnswer(line)
+    #             encoded = line.encode('utf-8')
+    #             conn.sendall(encoded)
+
+    #             while True:
+    #                 data = conn.recv(1024)
+    #                 if len(data) == 0:
+    #                     break
+
+    #                 if data.strip().decode('utf-8') == answer:
+    #                     break
+    #                 else:
+    #                     wrong += 1
+    #                     if wrong >= ProblemThread.WRONG_MAX:
+    #                         conn.sendall('Game Over'.encode('utf-8'))
+    #                         print('Game over. Disconnected for', conn.getpeername())
+    #                         conn.close()
+    #                         return
+    #                     conn.sendall(encoded)
+
+    #     conn.sendall('complete'.encode('utf-8'))
+
+    def fetchProblemWords(self):
+        # word_ids = [random.randint(1, ProblemThread.WORD_COUNT_MAX)
+        #             for x in range(ProblemThread.WORD_PER_ONE_PROBLEM)]
+        # query = '''
+        #     select word from words where
+        #     id==? or id==? or id==? or id==? or id==? or
+        #     id==? or id==? or id==? or id==? or id==?
+        # '''
+        # self.db_cursor.execute(query, tuple(word_ids))
+        db_conn = sqlite3.connect(ProblemThread.DB_FILE)
+        db_cursor = db_conn.cursor()
+
+        query = 'select word from words order by random() limit 10'
+        db_cursor.execute(query)
+        words = db_cursor.fetchall()
+        db_conn.close()
+
+        # ret = ''
+        # for w in words:
+        #     ret += w[0]
+        #     ret += ','
+        # return ret
+
+        ret_list = [w[0] for w in words]
+        return ','.join(ret_list)
+
     def createAnswer(self, string):
         words = string.strip().split(',')
         words.sort()
         return ''.join(words)
-
-    def mainProblem(self, conn):
-        with open(ProblemThread.WORD_FILE, 'r') as f:
-            for line in f:
-                wrong = 0
-                answer = self.createAnswer(line[2:])
-                encoded = line.encode('utf-8')
-                conn.sendall(encoded)
-
-                while True:
-                    data = conn.recv(1024)
-                    if len(data) == 0:
-                        break
-
-                    if data.strip().decode('utf-8') == answer:
-                        break
-                    else:
-                        wrong += 1
-                        if wrong >= ProblemThread.WRONG_MAX:
-                            conn.sendall('Game Over'.encode('utf-8'))
-                            # TODO: maybe exists more better way. (don't use sys.exit())
-                            sys.exit(0)
-                        conn.sendall(encoded)
-
-        conn.sendall('complete'.encode('utf-8'))

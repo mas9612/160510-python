@@ -19,6 +19,9 @@ while True:
         break
 
     data = data.strip().decode('utf-8')
+    if data == 'complete':
+        print(data)
+        break
     if data.startswith('q:'):
         data = data[2:].split(',')
         data.sort()

@@ -2,3 +2,4 @@
 *.sh
 /__pycache__
 /test.py
+/reg_words.py
