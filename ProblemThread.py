@@ -6,8 +6,6 @@ import threading
 import sqlite3
 import random
 
-# TODO: get english words from sqlite, then join it and send to client.
-
 
 class ProblemThread(threading.Thread):
     WRONG_MAX = 3
@@ -65,41 +63,7 @@ class ProblemThread(threading.Thread):
 
         conn.sendall('complete'.encode('utf-8'))
 
-    # def mainProblem(self, conn):
-    #     with open(ProblemThread.WORD_FILE, 'r') as f:
-    #         for line in f:
-    #             wrong = 0
-    #             answer = self.createAnswer(line)
-    #             encoded = line.encode('utf-8')
-    #             conn.sendall(encoded)
-
-    #             while True:
-    #                 data = conn.recv(1024)
-    #                 if len(data) == 0:
-    #                     break
-
-    #                 if data.strip().decode('utf-8') == answer:
-    #                     break
-    #                 else:
-    #                     wrong += 1
-    #                     if wrong >= ProblemThread.WRONG_MAX:
-    #                         conn.sendall('Game Over'.encode('utf-8'))
-    #                         print('Game over. Disconnected for', conn.getpeername())
-    #                         conn.close()
-    #                         return
-    #                     conn.sendall(encoded)
-
-    #     conn.sendall('complete'.encode('utf-8'))
-
     def fetchProblemWords(self):
-        # word_ids = [random.randint(1, ProblemThread.WORD_COUNT_MAX)
-        #             for x in range(ProblemThread.WORD_PER_ONE_PROBLEM)]
-        # query = '''
-        #     select word from words where
-        #     id==? or id==? or id==? or id==? or id==? or
-        #     id==? or id==? or id==? or id==? or id==?
-        # '''
-        # self.db_cursor.execute(query, tuple(word_ids))
         db_conn = sqlite3.connect(ProblemThread.DB_FILE)
         db_cursor = db_conn.cursor()
 
@@ -107,12 +71,6 @@ class ProblemThread(threading.Thread):
         db_cursor.execute(query)
         words = db_cursor.fetchall()
         db_conn.close()
-
-        # ret = ''
-        # for w in words:
-        #     ret += w[0]
-        #     ret += ','
-        # return ret
 
         ret_list = [w[0] for w in words]
         return ','.join(ret_list)
