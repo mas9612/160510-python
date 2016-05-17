@@ -4,7 +4,6 @@
 
 import threading
 import sqlite3
-import random
 
 
 class ProblemThread(threading.Thread):
@@ -19,7 +18,6 @@ class ProblemThread(threading.Thread):
     def __init__(self, conn):
         super().__init__()
         self.conn = conn
-        random.seed()
 
     def run(self):
         self.sendHelp(self.conn)
